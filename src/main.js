@@ -8,35 +8,75 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  StyleSheet,
+  Text,
   View,
+  Image
 } from 'react-native';
 import { WebView } from 'react-native-webview';
+import MarqueeView from 'react-native-marquee-view';
 
-const eventURL = "https://vimeo.com/event/2171363/embed/11f17392b8";
-const showcaseURL = "https://vimeo.com/showcase/9576184/embed";
-
-const Main = () => {
-  const [videoUrl, SetVideoUrl] = useState(eventURL);
-
-  const getLiveURL = async () => {
-    let response = await fetch(
-      'https://tv.dire.it/api/Videos/getlivestatus'
-    );
-    let json = response.json();
-    let url = json.isLive ? eventURL : showcaseURL;
-    return url;
-  }
-
-  useEffect(() => {
-    SetVideoUrl(getLiveURL());
-  }, []);
-
+const Main = ({ route, navigation }) => {
+  const { videoURL, tickerData } = route.params;
   return (
     <View style={{ flex: 1 }}>
-      <WebView source={{ uri: videoUrl }} style={{ flex: 1 }} />
-    </View>
+      <WebView source={{ uri: videoURL }} style={{ flex: 1 }} />
+      <View
+        style={{
+          width: '100%',
+          height: 50,
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+        <Image
+          style={{
+            height: 40,
+            width: 100,
+            resizeMode: "contain"
+          }}
+          source={require("./../assets/ticker.png")}
+        />
+        <View style={{ flex: 1 }}>
+          <MarqueeView
+            delay={0}
+          >
+            <View style={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center'
+            }}>
+              {tickerData.map((item, index) => {
+                return <View key={index} style={{
+                  height: 50,
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center'
+                }}>
+                  <View style={{
+                    width: 16,
+                    height: '80%',
+                    backgroundColor: '#F00',
+                    marginHorizontal: 10
+                  }} />
+                  <Text style={{
+                    color: '#000',
+                    fontSize: 30,
+                    fontWeight: 'bold',
+                    marginRight: 10
+                  }}>{item.title}</Text>
+                  <Text style={{
+                    fontSize: 30,
+                    fontWeight: 'bold'
+                  }}>{item.description}</Text>
+                </View>
+              })}
 
+            </View>
+          </MarqueeView>
+        </View>
+      </View>
+    </View>
   );
 };
 
