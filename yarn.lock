@@ -5634,11 +5634,6 @@ react-native-gradle-plugin@^0.0.7:
   resolved "https://registry.npmjs.org/react-native-gradle-plugin/-/react-native-gradle-plugin-0.0.7.tgz"
   integrity sha512-+4JpbIx42zGTONhBTIXSyfyHICHC29VTvhkkoUOJAh/XHPEixpuBduYgf6Y4y9wsN1ARlQhBBoptTvXvAFQf5g==
 
-react-native-marquee-scroll@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/react-native-marquee-scroll/-/react-native-marquee-scroll-1.0.3.tgz#91075a453ea8889e9bdb6b871466b8edca021159"
-  integrity sha512-D2yRDhmRj+T7JgMsCogrf9Et16xAcmZ3s0azFtdpRJF+UfhSSJu0PRIZyVS2jjtQzwAo14dm2I6Rgs8qIBVtmA==
-
 react-native-marquee-view@^1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/react-native-marquee-view/-/react-native-marquee-view-1.0.5.tgz#545dc561bc9da9fe6da164726268524a12d9c9a1"

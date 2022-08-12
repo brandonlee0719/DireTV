@@ -10,17 +10,14 @@ import Video from "react-native-video";
 
 const { width, height } = Dimensions.get("window");
 
-const eventURL = "https://vimeo.com/event/2171363/embed/11f17392b8";
-const showcaseURL = "https://vimeo.com/showcase/9576184/embed";
-
 const Splash = ({ navigation }) => {
 
-    const getLiveURL = async () => {
+    const getLive = async () => {
         let response = await fetch(
             'https://tv.dire.it/api/Videos/getlivestatus'
         );
-        let json = response.json();
-        return json.isLive ? eventURL : showcaseURL;
+        let json = await response.json();
+        return json.isLive;
     }
 
     const fetchData = async () => {
@@ -40,11 +37,15 @@ const Splash = ({ navigation }) => {
     }
 
     useEffect(() => {
+        let isLive = false;
+        let tickerData = [];
         (async () => {
-            let videoURL = await getLiveURL();
-            let tickerData = await fetchData();
+            isLive = await getLive();
+            tickerData = await fetchData();
+
+            console.log("---->", isLive);
             const interval = setInterval(() => {
-                navigation.navigate('Main', { videoURL: videoURL, tickerData: tickerData });
+                navigation.navigate('Main', { isLive: isLive, tickerData: tickerData });
             }, 3000);
             return () => clearInterval(interval);
         })();
