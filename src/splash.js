@@ -1,25 +1,25 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
     StyleSheet,
     Text,
-    useColorScheme,
+    Image,
     Dimensions,
     View,
 } from 'react-native';
 import Video from "react-native-video";
+
 const { width, height } = Dimensions.get("window");
-const Splash = () => {
+
+const Splash = ({ navigation }) => {
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            console.log('This will be called every 2 seconds');
+            navigation.navigate('Main');
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <View style={styles.container}>
@@ -32,7 +32,15 @@ const Splash = () => {
                 rate={1.0}
                 ignoreSilentSwitch={"obey"}
             />
-            
+            <View style={styles.logoContainer}>
+                <Image
+                    style={styles.logo}
+                    source={require("./../assets/logo.png")}
+                />
+                <Text
+                    style={styles.logoText}
+                >tv.dire.it</Text>
+            </View>
         </View>
     );
 };
@@ -43,12 +51,24 @@ const styles = StyleSheet.create({
     },
     backgroundVideo: {
         height: height,
+        width: width,
         position: "absolute",
-        top: 0,
-        left: 0,
-        alignItems: "stretch",
-        bottom: 0,
-        right: 0
+    },
+    logoContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#FFF0',
+    },
+    logo: {
+        height: '30%',
+        resizeMode: 'contain',
+    },
+    logoText: {
+        marginTop: 10,
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#000'
     }
 });
 
