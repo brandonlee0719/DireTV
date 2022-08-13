@@ -6,38 +6,240 @@
  * @flow strict-local
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StatusBar,
+  StyleSheet,
+  View,
+  Text,
+  Image,
+  Dimensions
 } from 'react-native';
-import Splash from './src/splash';
-import Main from './src/main';
+import Video from "react-native-video";
+
+// import Splash from './src/splash';
+// import Main from './src/main';
 
 import Orientation from 'react-native-orientation-locker';
+import { WebView } from 'react-native-webview';
+import MarqueeView from 'react-native-marquee-view';
+import FastImage from 'react-native-fast-image'
 
-import { createStackNavigator } from '@react-navigation/stack';
-import { NavigationContainer } from '@react-navigation/native';
+const { width, height } = Dimensions.get("window");
+const eventURL = '<iframe src="https://vimeo.com/event/2171363/embed/11f17392b8?autoplay=1&loop=1&autopause=0&muted=1" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe>';
+const showcaseURL = '<iframe src="https://vimeo.com/showcase/9576184/embed?autoplay=1&loop=1&autopause=0&muted=1" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe>';
+
+
+// import { createStackNavigator } from '@react-navigation/stack';
+// import { NavigationContainer } from '@react-navigation/native';
 
 
 Orientation.lockToLandscape();
 
 const App = () => {
 
-  const Stack = createStackNavigator();
+  // const Stack = createStackNavigator();
   console.disableYellowBox = true;
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLive, setIsLive] = useState(true);
+  const [tickerData, setTickerData] = useState([]);
+
+  const getLive = async () => {
+    let response = await fetch(
+      'https://tv.dire.it/api/Videos/getlivestatus'
+    );
+    let json = await response.json();
+    return json.isLive;
+  }
+
+  const fetchData = async () => {
+    try {
+      let url = "https://www.dire.it/feed/ultimenews";
+      let urlWithCorsAnywhere = `https://api.rss2json.com/v1/api.json?rss_url=${url}&api_key=nfrmkxownjdzgy2n5vtuwkhav7w8ivakwqyz6wtj&count=100`;
+      let data = await fetch(urlWithCorsAnywhere);
+      let json = await data.json();
+      if (data.ok) {
+        return json.items;
+      } else {
+        console.log("Error occurred while fetching feed");
+      }
+    } catch (error) {
+      console.log(error.toString());
+    }
+  }
+
+  useEffect(() => {
+    setIsLoading(true);
+    (async () => {
+      setIsLive(await getLive());
+      setTickerData(await fetchData());
+      const interval = setInterval(() => {
+        setIsLoading(false);
+      }, 5000);
+      return () => clearInterval(interval);
+    })();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      setIsLive(await getLive());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [isLive]);
 
   return (
     <>
       <StatusBar hidden={true} />
-      <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen name="Splash" component={Splash} options={{ headerShown: false }} />
-          <Stack.Screen name="Main" component={Main} options={{ headerShown: false }} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <View style={[styles.container, { display: isLoading ? "flex" : "none" }]}>
+        <Video
+          source={require("./assets/splash_background.mp4")}
+          style={styles.backgroundVideo}
+          muted={true}
+          repeat={true}
+          resizeMode={"stretch"}
+          posterResizeMode={"stretch"}
+          rate={1.0}
+          ignoreSilentSwitch={"obey"}
+        />
+        <View style={styles.logoContainer}>
+          {/* <Image
+            style={styles.logo}
+            source={require("./assets/logo.png")}
+          /> */}
+          <FastImage
+            style={styles.logo}
+            source={require("./assets/logo.png")}
+            resizeMode={FastImage.resizeMode.contain}
+          />
+          <Text
+            style={styles.logoText}
+          >tv.dire.it</Text>
+        </View>
+      </View>
+      <View style={[styles.container, { display: isLoading ? "none" : "flex", position: 'relative' }]}>
+        <View style={{ width: isLive ? '100%' : '92%', height: isLive ? '100%' : '92%', backgroundColor: 'red', alignSelf: 'center' }}>
+          <WebView
+            style={{ backgroundColor: '#000' }}
+            source={{ html: isLive ? eventURL : showcaseURL }}
+          />
+        </View>
 
+        <View
+          style={[styles.tickerContainer, { display: isLive ? "none" : "flex" }]}>
+          <Image
+            style={styles.tickerLogo}
+            source={require("./assets/ticker.png")}
+          />
+          <View style={[styles.container, { backgroundColor: '#FFF' }]}>
+            <MarqueeView style={{ flex: 1 }} delay={0}>
+              <View style={styles.marqueeContainer}>
+                {tickerData.map((item, index) => {
+                  return <View key={index} style={styles.marqueeView}>
+                    <View style={styles.marqueeSeperator} />
+                    <Text style={styles.marqueeTitle}>{item.title}</Text>
+                    <Text style={styles.maqueeDescription}>{item.description}</Text>
+                  </View>
+                })}
+              </View>
+            </MarqueeView>
+          </View>
+        </View>
+        <Image
+          style={[styles.whiteLogo, { right: isLive ? '3%' : '6%' }]}
+          source={require("./assets/white_logo.png")}
+        />
+      </View>
     </>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000'
+  },
+  backgroundVideo: {
+    flex: 1,
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0
+  },
+  logoContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFF0',
+  },
+  logo: {
+    height: '30%',
+    width: '100%',
+    resizeMode: 'contain',
+  },
+  logoText: {
+    marginTop: 10,
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#000'
+  },
+  tickerContainer: {
+    alignSelf: 'center',
+    width: '92%',
+    height: '8%',
+    paddingVertical: 2,
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF'
+  },
+  tickerLogo: {
+    height: '90%',
+    width: 70,
+    resizeMode: "contain",
+    marginHorizontal: 6
+  },
+  marqueeContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF',
+  },
+  marqueeView: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  marqueeSeperator: {
+    width: 8,
+    height: 30,
+    marginHorizontal: 10,
+    backgroundColor: '#FF0000',
+  },
+  marqueeTitle: {
+    color: '#000',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginRight: 10,
+    fontFamily: "Roboto",
+  },
+  maqueeDescription: {
+    fontSize: 14,
+    fontFamily: 'Roboto'
+  },
+  whiteLogo: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    resizeMode: 'contain',
+    top: 14,
+    opacity: 0.7
+  }
+});
 
 export default App;
