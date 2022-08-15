@@ -30,15 +30,10 @@ const eventURL = '<iframe src="https://vimeo.com/event/2171363/embed/11f17392b8?
 const showcaseURL = '<iframe src="https://vimeo.com/showcase/9576184/embed?autoplay=1&loop=1&autopause=0&muted=1" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe>';
 
 
-// import { createStackNavigator } from '@react-navigation/stack';
-// import { NavigationContainer } from '@react-navigation/native';
-
-
 Orientation.lockToLandscape();
 
 const App = () => {
 
-  // const Stack = createStackNavigator();
   console.disableYellowBox = true;
 
   const [isLoading, setIsLoading] = useState(false);
@@ -103,10 +98,6 @@ const App = () => {
           ignoreSilentSwitch={"obey"}
         />
         <View style={styles.logoContainer}>
-          {/* <Image
-            style={styles.logo}
-            source={require("./assets/logo.png")}
-          /> */}
           <FastImage
             style={styles.logo}
             source={require("./assets/logo.png")}
@@ -118,7 +109,7 @@ const App = () => {
         </View>
       </View>
       <View style={[styles.container, { display: isLoading ? "none" : "flex", position: 'relative' }]}>
-        <View style={{ width: isLive ? '100%' : '92%', height: isLive ? '100%' : '92%', backgroundColor: 'red', alignSelf: 'center' }}>
+        <View style={{ width: isLive ? '100%' : '92%', height: isLive ? '100%' : '92%', alignSelf: 'center' }}>
           <WebView
             style={{ backgroundColor: '#000' }}
             source={{ html: isLive ? eventURL : showcaseURL }}
@@ -131,8 +122,8 @@ const App = () => {
             style={styles.tickerLogo}
             source={require("./assets/ticker.png")}
           />
-          <View style={[styles.container, { backgroundColor: '#FFF' }]}>
-            <MarqueeView style={{ flex: 1 }} delay={0}>
+          <View style={[{ backgroundColor: '#fff', height: '100%', width: '86%', justifyContent: 'center', display: 'flex' }]}>
+            <MarqueeView delay={0} style={{ backgroundColor: '#FFF', width: '100%', height: '100%' }}>
               <View style={styles.marqueeContainer}>
                 {tickerData.map((item, index) => {
                   return <View key={index} style={styles.marqueeView}>
@@ -192,28 +183,25 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: '#FFF'
   },
   tickerLogo: {
     height: '90%',
-    width: 70,
+    width: '10%',
     resizeMode: "contain",
-    marginHorizontal: 6
+    marginHorizontal: '2%'
   },
   marqueeContainer: {
+    height: '100%',
+    width: '100%',
     display: 'flex',
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFF',
   },
   marqueeView: {
-    flex: 1,
+    height: '100%',
     display: 'flex',
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center'
   },
   marqueeSeperator: {
     width: 8,
@@ -226,11 +214,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     marginRight: 10,
-    fontFamily: "Roboto",
+    fontFamily: 'RobotoCondensed-Regular'
   },
   maqueeDescription: {
     fontSize: 14,
-    fontFamily: 'Roboto'
+    fontFamily: 'RobotoCondensed-Regular'
   },
   whiteLogo: {
     position: 'absolute',
