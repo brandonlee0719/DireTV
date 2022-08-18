@@ -195,6 +195,7 @@
      flexDirection: 'row',
      alignItems: 'center',
      backgroundColor: '#FFF',
+     marginTop: Platform.OS === "ios" ? -1: 0,
      zIndex: 100
    },
    tickerLogo: {
