@@ -117,9 +117,9 @@
          </View>
        </View>
        <View style={[styles.container, { display: isLoading ? "none" : "flex", position: 'relative' }]}>
-         <View style={{ width: isLive ? '100%' : '92%', height: isLive ? '100%' : '92%', alignSelf: 'center' }}>
+         <View style={{ width: isLive ? '100%' : '86%', height: isLive ? '100%' : '92%', alignSelf: 'center' }}>
            <WebView
-             style={{ backgroundColor: '#000', width: '100%'}}
+             style={{ backgroundColor: 'transparent', width: '100%'}}
              source={{ html: isLive ? eventURL : showcaseURL }}
               useWebKit={true}
               originWhitelist={['*']}
