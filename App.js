@@ -73,7 +73,7 @@
        setTickerData(await fetchData());
        const interval = setInterval(() => {
          setIsLoading(false);
-       }, 5000);
+       }, 1000);
        return () => clearInterval(interval);
      })();
    }, []);
