@@ -7,6 +7,7 @@
  */
 
  import React, { useEffect, useState } from 'react';
+ import PrefersHomeIndicatorAutoHidden from 'react-native-home-indicator';
  import {
    StatusBar,
    StyleSheet,
@@ -87,7 +88,13 @@
    return (
      <>
        <StatusBar hidden={true} />
+
        <View style={[styles.container, { display: isLoading ? "flex" : "none" }]}>
+       <PrefersHomeIndicatorAutoHidden />
+       {/* <HomeIndicator autoHidden />
+            <SomeDeepComponentTree>
+                 <HomeIndicator autoHidden={true} />
+            </SomeDeepComponentTree> */}
          <Video
            source={require("./assets/splash_background.mp4")}
            style={styles.backgroundVideo}
