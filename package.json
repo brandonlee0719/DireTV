@@ -11,7 +11,10 @@
   },
   "dependencies": {
     "react": "17.0.2",
-    "react-native": "npm:react-native-tvos@0.68.2-5"
+    "react-native": "npm:react-native-tvos@0.68.2-5",
+    "react-native-fast-image": "^8.5.11",
+    "react-native-marquee-view": "^1.0.5",
+    "react-native-video": "^5.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
