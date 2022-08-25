@@ -26,7 +26,7 @@
  import MarqueeView from 'react-native-marquee-view';
  import FastImage from 'react-native-fast-image';
  
- const { width, height } = Dimensions.get("window");
+ const { height } = Dimensions.get("window");
  const eventURL = '<iframe src="https://vimeo.com/event/2171363/embed/11f17392b8?autoplay=1&loop=1&autopause=0&muted=0" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe>';
  const showcaseURL = '<iframe src="https://vimeo.com/showcase/9576184/embed?autoplay=1&loop=1&autopause=0&muted=0" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe>';
  
@@ -39,15 +39,15 @@
    LogBox.ignoreLogs(['new NativeEventEmitter']);
    LogBox.ignoreAllLogs();
  
-   const appState = useRef(AppState.currentState);
-   const [appStateVisible, setAppStateVisible] = useState(appState.current);
+   // const appState = useRef(AppState.currentState);
+   // const [appStateVisible, setAppStateVisible] = useState(appState.current);
  
-   const [isLoading, setIsLoading] = useState(false);
+   const [isLoading, setIsLoading] = useState(true);
    const [isLive, setIsLive] = useState(true);
    const [tickerData, setTickerData] = useState([]);
    const [videoData, setVideoData] = useState([]);
    const [playIndex, setPlayIndex] = useState(-1);
-  const [curTime, setCurTime] = useState("00:00");
+   const [curTime, setCurTime] = useState("00:00");
  
    const getLive = async () => {
      let response = await fetch(
@@ -94,10 +94,10 @@
        setIsLive(await getLive());
        setTickerData(await fetchData());
        setVideoData(await fetchVideoData());
-      //  const interval = setInterval(() => {
-      //    setIsLoading(false);
-      //  }, 5000);
-      //  return () => clearInterval(interval);
+       // const interval = setInterval(() => {
+       //   setIsLoading(false);
+       // }, 5000);
+       // return () => clearInterval(interval);
      })();
    }, []);
  
@@ -107,113 +107,105 @@
      }, 60000);
      return () => clearInterval(interval);
    }, [isLive]);
-
-   useEffect(() => {
-    const interval = setInterval(async () => {
-      let current = `${makeTwoLength(new Date().getHours())}:${makeTwoLength(new Date().getMinutes())}`;
-      setCurTime(current);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const makeTwoLength = (number) => {
-    if (number < 10) {
-      return `0${number}`
-    } else {
-      return `${number}`
-    }
-  }
  
    useEffect(() => {
-     const subscription = AppState.addEventListener("change", nextAppState => {
-       if (
-         appState.current.match(/inactive|background/) &&
-         nextAppState === "active"
-       ) {
-         console.log("App has come to the foreground!");
-       }
- 
-       appState.current = nextAppState;
-       setAppStateVisible(appState.current);
-     });
- 
-     return () => {
-       subscription.remove();
-     };
+     const interval = setInterval(async () => {
+       let current = `${makeTwoLength(new Date().getHours())}:${makeTwoLength(new Date().getMinutes())}`;
+       setCurTime(current);
+     }, 1000);
+     return () => clearInterval(interval);
    }, []);
  
-   const setLiveVideo = () => {
-     setPlayIndex(0);
+   const makeTwoLength = (number) => {
+     if (number < 10) {
+       return `0${number}`
+     } else {
+       return `${number}`
+     }
    }
  
-   const setNextVideo = async() => {
-     const _index = playIndex + 1;
-     if(_index === videoData.length) {
-      setVideoData(await fetchVideoData());
-      setPlayIndex(0);
-     } else {
-      setPlayIndex(_index);
-     }     
+   // useEffect(() => {
+   //   const subscription = AppState.addEventListener("change", nextAppState => {
+   //     if (
+   //       appState.current.match(/inactive|background/) &&
+   //       nextAppState === "active"
+   //     ) {
+   //       console.log("App has come to the foreground!");
+   //     }
+ 
+   //     appState.current = nextAppState;
+   //     setAppStateVisible(appState.current);
+   //   });
+ 
+   //   return () => {
+   //     subscription.remove();
+   //   };
+   // }, []);
+ 
+   const setNextVideo = () => {
+     const index = playIndex + 1 === videoData.length ? 0 : playIndex + 1;
+     setPlayIndex(index);
    }
  
    return (
      <>
        <StatusBar hidden={true} />
- 
-       <View style={[styles.container, { display: isLoading ? "flex" : "none" }]}>
-         <PrefersHomeIndicatorAutoHidden />
-         {isLoading && <Video
-        source={require("./assets/splash_background.mp4")}
-        style={styles.container}
-        muted={true}
-        repeat={true}
-        resizeMode={"stretch"}
-        posterResizeMode={"stretch"}
-        rate={1.0}
-        ignoreSilentSwitch={"obey"}
-        onEnd={() => setIsLoading(false)}
-      />}
-       </View>
+       <PrefersHomeIndicatorAutoHidden />
+       {isLoading && <View style={styles.container}>
+         <Video
+           source={require("./assets/splash_background.mp4")}
+           style={{ height: '100%', width: height * 16 / 9, alignSelf: 'center', }}
+           muted={false}
+           repeat={false}
+           paused={false}
+           resizeMode={"contain"}
+           posterResizeMode={"contain"}
+           rate={1.0}
+           ignoreSilentSwitch={"ignore"}
+           onEnd={() => setIsLoading(false)}
+         />
+       </View>}
        {!isLoading &&
          <View style={[styles.container, { display: isLoading ? "none" : "flex", position: 'relative' }]}>
            <View style={{ width: isLive ? '100%' : videoWidth, height: isLive ? '100%' : '92%', alignSelf: 'center' }}>
              {isLive && <WebView
                style={{ backgroundColor: 'transparent', width: '100%' }}
-               source={{ html: isLive ? eventURL : showcaseURL }}
+               source={{ html: eventURL }}
                useWebKit={true}
                originWhitelist={['*']}
                allowsInlineMediaPlayback={true}
              />}
-             {!isLive && <>
-               <Video
+             {!isLive && <View style={{ width: '100%', height: '100%' }}>
+               {playIndex == -1 && <Video
                  source={require("./assets/dire_tv.mp4")}
-                 style={{ width: '100%', height: '100%', display: playIndex === -1 ? 'flex' : 'none' }}
+                 style={{ width: '100%', height: '100%' }}
                  muted={false}
                  repeat={false}
-                 paused={playIndex === -1 ? false : true}
-                 resizeMode={"stretch"}
-                 posterResizeMode={"stretch"}
+                 paused={false}
+                 resizeMode={"contain"}
+                 posterResizeMode={"contain"}
                  rate={1.0}
-                 ignoreSilentSwitch={"ignore"}
                  controls={true}
-                 onEnd={() => setLiveVideo()}
-               />
+                 ignoreSilentSwitch={"ignore"}
+                 onEnd={() => setPlayIndex(0)}
+               />}
                {videoData.length !== 0 && videoData.map((video, index) => {
-                 return index === playIndex &&  <Video
+                 return index == playIndex && <Video
                    key={index}
                    source={{ uri: video.mp4url }}
-                   style={{ width: '100%', height: '100%' }}
-                   muted={ false }
+                   style={{ width: '100%', height: '100%', }}
+                   muted={false}
                    repeat={false}
-                   resizeMode={"stretch"}
-                   posterResizeMode={"stretch"}
+                   paused={false}
+                   resizeMode={"contain"}
+                   posterResizeMode={"contain"}
                    rate={1.0}
-                  ignoreSilentSwitch={"ignore"}
                    controls={true}
+                   ignoreSilentSwitch={"ignore"}
                    onEnd={() => setNextVideo()}
                  />
                })}
-             </>}
+             </View>}
            </View>
  
            {!isLive && <View
@@ -221,10 +213,15 @@
              <FastImage
                style={styles.tickerLogo}
                source={require("./assets/ticker.png")}
+               resizeMode={FastImage.resizeMode.contain}
              />
              <Text style={styles.time}>{curTime}</Text>
              <View style={[{ backgroundColor: '#blue', height: '100%', width: '95%', justifyContent: 'center', display: 'flex' }]}>
-               <MarqueeView delay={0} style={{ backgroundColor: '#FFF', width: '100%', height: '100%' }}>
+               <MarqueeView
+                 style={{ backgroundColor: '#FFF', width: '100%', height: '100%' }}
+                 delay={0}
+                 speed={0.25}
+               >
                  <View style={styles.marqueeContainer}>
                    {tickerData.map((item, index) => {
                      return <View key={index} style={styles.marqueeView}>
@@ -238,8 +235,9 @@
              </View>
            </View>}
            <FastImage
-             style={[styles.whiteLogo, { right: Platform.OS === 'ios' ? isLive ? '11%' : '15%' : isLive ? '3%' : '6%' }]}
+             style={[styles.whiteLogo, { right: Platform.OS === 'ios' ? isLive ? '11%' : '14%' : isLive ? '3%' : '6%' }]}
              source={require("./assets/white_logo.png")}
+             resizeMode={FastImage.resizeMode.contain}
            />
          </View>}
      </>
@@ -278,7 +276,7 @@
    },
    tickerContainer: {
      alignSelf: 'center',
-     width: videoWidth,
+     width: height * 0.92 * 16 / 9,
      height: '8%',
      overflow: 'hidden',
      paddingVertical: 2,
@@ -286,7 +284,7 @@
      flexDirection: 'row',
      alignItems: 'center',
      backgroundColor: '#FFF',
-     overflow: 'hidden'
+     marginTop: Platform.OS === "ios" ? -1 : 0,
    },
    tickerLogo: {
      height: '100%',
@@ -317,7 +315,7 @@
      fontWeight: 'bold',
      marginRight: 10,
      fontFamily: 'RobotoCondensed-Regular',
-    color: '#000'
+     color: '#000'
    },
    maqueeDescription: {
      fontSize: 14,
@@ -332,12 +330,11 @@
      opacity: 0.7
    },
    time: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginRight: 10,
-    fontFamily: 'RobotoCondensed-Regular',
-    color: '#000'
-  }
+     fontSize: 14,
+     fontWeight: 'bold',
+     marginRight: 10,
+     color: '#000'
+   }
  });
  
  export default App;
