@@ -6,7 +6,7 @@
  * @flow strict-local
  */
 
- import React, { useEffect, useState } from 'react';
+ import React, { useEffect, useState, useRef } from 'react';
  import PrefersHomeIndicatorAutoHidden from 'react-native-home-indicator';
  import {
    StatusBar,
@@ -15,12 +15,11 @@
    Text,
    Image,
    Dimensions,
-   Platform
+   Platform,
+   AppState,
+   LogBox
  } from 'react-native';
  import Video from "react-native-video";
- 
- // import Splash from './src/splash';
- // import Main from './src/main';
  
  import Orientation from 'react-native-orientation-locker';
  import { WebView } from 'react-native-webview';
@@ -33,14 +32,22 @@
  
  
  Orientation.lockToLandscape();
+ const videoWidth = height * 0.92 * 16 / 9;
  
  const App = () => {
  
-   console.disableYellowBox = true;
+   LogBox.ignoreLogs(['new NativeEventEmitter']);
+   LogBox.ignoreAllLogs();
+ 
+   const appState = useRef(AppState.currentState);
+   const [appStateVisible, setAppStateVisible] = useState(appState.current);
  
    const [isLoading, setIsLoading] = useState(false);
    const [isLive, setIsLive] = useState(true);
    const [tickerData, setTickerData] = useState([]);
+   const [videoData, setVideoData] = useState([]);
+   const [playIndex, setPlayIndex] = useState(-1);
+  const [curTime, setCurTime] = useState("00:00");
  
    const getLive = async () => {
      let response = await fetch(
@@ -66,15 +73,31 @@
      }
    }
  
+   const fetchVideoData = async () => {
+     try {
+       let url = "https://tv.dire.it/api/Videos/getallvideos?page=0&size=10&category=all";
+       let data = await fetch(url);
+       let json = await data.json();
+       if (data.ok) {
+         return json.videos;
+       } else {
+         console.log("Error occurred while fetching feed");
+       }
+     } catch (error) {
+       console.log(error.toString());
+     }
+   }
+ 
    useEffect(() => {
      setIsLoading(true);
      (async () => {
        setIsLive(await getLive());
        setTickerData(await fetchData());
-       const interval = setInterval(() => {
-         setIsLoading(false);
-       }, 1000);
-       return () => clearInterval(interval);
+       setVideoData(await fetchVideoData());
+      //  const interval = setInterval(() => {
+      //    setIsLoading(false);
+      //  }, 5000);
+      //  return () => clearInterval(interval);
      })();
    }, []);
  
@@ -84,74 +107,141 @@
      }, 60000);
      return () => clearInterval(interval);
    }, [isLive]);
+
+   useEffect(() => {
+    const interval = setInterval(async () => {
+      let current = `${makeTwoLength(new Date().getHours())}:${makeTwoLength(new Date().getMinutes())}`;
+      setCurTime(current);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const makeTwoLength = (number) => {
+    if (number < 10) {
+      return `0${number}`
+    } else {
+      return `${number}`
+    }
+  }
+ 
+   useEffect(() => {
+     const subscription = AppState.addEventListener("change", nextAppState => {
+       if (
+         appState.current.match(/inactive|background/) &&
+         nextAppState === "active"
+       ) {
+         console.log("App has come to the foreground!");
+       }
+ 
+       appState.current = nextAppState;
+       setAppStateVisible(appState.current);
+     });
+ 
+     return () => {
+       subscription.remove();
+     };
+   }, []);
+ 
+   const setLiveVideo = () => {
+     setPlayIndex(0);
+   }
+ 
+   const setNextVideo = async() => {
+     const _index = playIndex + 1;
+     if(_index === videoData.length) {
+      setVideoData(await fetchVideoData());
+      setPlayIndex(0);
+     } else {
+      setPlayIndex(_index);
+     }     
+   }
  
    return (
      <>
        <StatusBar hidden={true} />
-
-       <View style={[styles.container, { display: isLoading ? "flex" : "none" }]}>
-       <PrefersHomeIndicatorAutoHidden />
-       {/* <HomeIndicator autoHidden />
-            <SomeDeepComponentTree>
-                 <HomeIndicator autoHidden={true} />
-            </SomeDeepComponentTree> */}
-         <Video
-           source={require("./assets/splash_background.mp4")}
-           style={styles.backgroundVideo}
-           muted={true}
-           repeat={true}
-           resizeMode={"stretch"}
-           posterResizeMode={"stretch"}
-           rate={1.0}
-           ignoreSilentSwitch={"obey"}
-         />
-         <View style={styles.logoContainer}>
-           <FastImage
-             style={styles.logo}
-             source={require("./assets/logo.png")}
-             resizeMode={FastImage.resizeMode.contain}
-           />
-           <Text
-             style={styles.logoText}
-           >tv.dire.it</Text>
-         </View>
-       </View>
-       <View style={[styles.container, { display: isLoading ? "none" : "flex", position: 'relative' }]}>
-         <View style={{ width: isLive ? '100%' : '86%', height: isLive ? '100%' : '92%', alignSelf: 'center' }}>
-           <WebView
-             style={{ backgroundColor: 'transparent', width: '100%'}}
-             source={{ html: isLive ? eventURL : showcaseURL }}
-              useWebKit={true}
-              originWhitelist={['*']}
-              allowsInlineMediaPlayback={true}
-           />
-         </View>
  
-         <View
-           style={[styles.tickerContainer, { display: isLive ? "none" : "flex" }]}>
-           <Image
-             style={styles.tickerLogo}
-             source={require("./assets/ticker.png")}
-           />
-           <View style={[{ backgroundColor: '#fff', height: '100%', width: '86%', justifyContent: 'center', display: 'flex' }]}>
-             <MarqueeView delay={0} style={{ backgroundColor: '#FFF', width: '100%', height: '100%' }}>
-               <View style={styles.marqueeContainer}>
-                 {tickerData.map((item, index) => {
-                   return <View key={index} style={styles.marqueeView}>
-                     <View style={styles.marqueeSeperator} />
-                     <Text style={styles.marqueeTitle}>{item.title}</Text>
-                     <Text style={styles.maqueeDescription}>{item.description}</Text>
-                   </View>
-                 })}
-               </View>
-             </MarqueeView>
-           </View>
-         </View>
-         <Image
-           style={[styles.whiteLogo, { right: Platform.OS === 'ios' ? isLive ?  '11%': '14%': isLive ? '3%' : '6%' }]}
-           source={require("./assets/white_logo.png")}
-         />
+       <View style={[styles.container, { display: isLoading ? "flex" : "none" }]}>
+         <PrefersHomeIndicatorAutoHidden />
+         {isLoading && <Video
+        source={require("./assets/splash_background.mp4")}
+        style={styles.container}
+        muted={true}
+        repeat={true}
+        resizeMode={"stretch"}
+        posterResizeMode={"stretch"}
+        rate={1.0}
+        ignoreSilentSwitch={"obey"}
+        onEnd={() => setIsLoading(false)}
+      />}
        </View>
+       {!isLoading &&
+         <View style={[styles.container, { display: isLoading ? "none" : "flex", position: 'relative' }]}>
+           <View style={{ width: isLive ? '100%' : videoWidth, height: isLive ? '100%' : '92%', alignSelf: 'center' }}>
+             {isLive && <WebView
+               style={{ backgroundColor: 'transparent', width: '100%' }}
+               source={{ html: isLive ? eventURL : showcaseURL }}
+               useWebKit={true}
+               originWhitelist={['*']}
+               allowsInlineMediaPlayback={true}
+             />}
+             {!isLive && <>
+               <Video
+                 source={require("./assets/dire_tv.mp4")}
+                 style={{ width: '100%', height: '100%', display: playIndex === -1 ? 'flex' : 'none' }}
+                 muted={false}
+                 repeat={false}
+                 paused={playIndex === -1 ? false : true}
+                 resizeMode={"stretch"}
+                 posterResizeMode={"stretch"}
+                 rate={1.0}
+                 ignoreSilentSwitch={"ignore"}
+                 controls={true}
+                 onEnd={() => setLiveVideo()}
+               />
+               {videoData.length !== 0 && videoData.map((video, index) => {
+                 return index === playIndex &&  <Video
+                   key={index}
+                   source={{ uri: video.mp4url }}
+                   style={{ width: '100%', height: '100%' }}
+                   muted={ false }
+                   repeat={false}
+                   resizeMode={"stretch"}
+                   posterResizeMode={"stretch"}
+                   rate={1.0}
+                  ignoreSilentSwitch={"ignore"}
+                   controls={true}
+                   onEnd={() => setNextVideo()}
+                 />
+               })}
+             </>}
+           </View>
+ 
+           {!isLive && <View
+             style={styles.tickerContainer}>
+             <FastImage
+               style={styles.tickerLogo}
+               source={require("./assets/ticker.png")}
+             />
+             <Text style={styles.time}>{curTime}</Text>
+             <View style={[{ backgroundColor: '#blue', height: '100%', width: '95%', justifyContent: 'center', display: 'flex' }]}>
+               <MarqueeView delay={0} style={{ backgroundColor: '#FFF', width: '100%', height: '100%' }}>
+                 <View style={styles.marqueeContainer}>
+                   {tickerData.map((item, index) => {
+                     return <View key={index} style={styles.marqueeView}>
+                       <View style={styles.marqueeSeperator} />
+                       <Text style={styles.marqueeTitle}>{item.title}</Text>
+                       <Text style={styles.maqueeDescription}>{item.description}</Text>
+                     </View>
+                   })}
+                 </View>
+               </MarqueeView>
+             </View>
+           </View>}
+           <FastImage
+             style={[styles.whiteLogo, { right: Platform.OS === 'ios' ? isLive ? '11%' : '15%' : isLive ? '3%' : '6%' }]}
+             source={require("./assets/white_logo.png")}
+           />
+         </View>}
      </>
    );
  };
@@ -188,21 +278,21 @@
    },
    tickerContainer: {
      alignSelf: 'center',
-     width: Platform.OS === 'ios' ? '75.5%': '92%',
+     width: videoWidth,
      height: '8%',
+     overflow: 'hidden',
      paddingVertical: 2,
      display: 'flex',
      flexDirection: 'row',
      alignItems: 'center',
      backgroundColor: '#FFF',
-     marginTop: Platform.OS === "ios" ? -1: 0,
-     zIndex: 100
+     overflow: 'hidden'
    },
    tickerLogo: {
-     height: '90%',
-     width: '10%',
+     height: '100%',
+     width: '5%',
      resizeMode: "contain",
-     marginHorizontal: '2%'
+     marginHorizontal: 10
    },
    marqueeContainer: {
      height: '100%',
@@ -223,11 +313,11 @@
      backgroundColor: '#FF0000',
    },
    marqueeTitle: {
-     color: '#000',
      fontSize: 14,
      fontWeight: 'bold',
      marginRight: 10,
-     fontFamily: 'RobotoCondensed-Regular'
+     fontFamily: 'RobotoCondensed-Regular',
+    color: '#000'
    },
    maqueeDescription: {
      fontSize: 14,
@@ -240,7 +330,14 @@
      resizeMode: 'contain',
      top: 14,
      opacity: 0.7
-   }
+   },
+   time: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginRight: 10,
+    fontFamily: 'RobotoCondensed-Regular',
+    color: '#000'
+  }
  });
  
  export default App;
