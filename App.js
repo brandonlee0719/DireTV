@@ -26,13 +26,13 @@
  import MarqueeView from 'react-native-marquee-view';
  import FastImage from 'react-native-fast-image';
  
- const { height } = Dimensions.get("window");
+ const { width, height } = Dimensions.get("window");
  const eventURL = '<iframe src="https://vimeo.com/event/2171363/embed/11f17392b8?autoplay=1&loop=1&autopause=0&muted=0" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe>';
  const showcaseURL = '<iframe src="https://vimeo.com/showcase/9576184/embed?autoplay=1&loop=1&autopause=0&muted=0" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe>';
  
  
  Orientation.lockToLandscape();
- const videoWidth = height * 0.92 * 16 / 9;
+ const videoWidth = width > height ? height * 0.92 * 16 / 9 : width * 0.92 * 16 / 9;
  
  const App = () => {
  
@@ -124,31 +124,13 @@
      }
    }
  
-   // useEffect(() => {
-   //   const subscription = AppState.addEventListener("change", nextAppState => {
-   //     if (
-   //       appState.current.match(/inactive|background/) &&
-   //       nextAppState === "active"
-   //     ) {
-   //       console.log("App has come to the foreground!");
-   //     }
- 
-   //     appState.current = nextAppState;
-   //     setAppStateVisible(appState.current);
-   //   });
- 
-   //   return () => {
-   //     subscription.remove();
-   //   };
-   // }, []);
- 
    const setNextVideo = () => {
      const index = playIndex + 1 === videoData.length ? 0 : playIndex + 1;
      setPlayIndex(index);
    }
  
    return (
-     <>
+     <View style={{ flex: 1, backgroundColor: '#000' }}>
        <StatusBar hidden={true} />
        <PrefersHomeIndicatorAutoHidden />
        {isLoading && <View style={styles.container}>
@@ -166,8 +148,17 @@
          />
        </View>}
        {!isLoading &&
-         <View style={[styles.container, { display: isLoading ? "none" : "flex", position: 'relative' }]}>
-           <View style={{ width: isLive ? '100%' : videoWidth, height: isLive ? '100%' : '92%', alignSelf: 'center' }}>
+         <View style={[styles.container, {
+           display: isLoading ? "none" : "flex",
+           position: 'relative',
+           width: isLive ? '100%' : videoWidth,
+           height: '100%',
+           alignItems: 'center',
+           justifyContent: 'center',
+           alignSelf: 'center',
+           overflow: 'hidden'
+         }]}>
+           <View style={{ width: '100%', height: isLive ? '100%' : '92%', alignSelf: 'center' }}>
              {isLive && <WebView
                style={{ backgroundColor: 'transparent', width: '100%' }}
                source={{ html: eventURL }}
@@ -185,7 +176,7 @@
                  resizeMode={"contain"}
                  posterResizeMode={"contain"}
                  rate={1.0}
-                 controls={true}
+                 controls={false}
                  ignoreSilentSwitch={"ignore"}
                  onEnd={() => setPlayIndex(0)}
                />}
@@ -200,7 +191,7 @@
                    resizeMode={"contain"}
                    posterResizeMode={"contain"}
                    rate={1.0}
-                   controls={true}
+                   controls={false}
                    ignoreSilentSwitch={"ignore"}
                    onEnd={() => setNextVideo()}
                  />
@@ -216,9 +207,9 @@
                resizeMode={FastImage.resizeMode.contain}
              />
              <Text style={styles.time}>{curTime}</Text>
-             <View style={[{ backgroundColor: '#blue', height: '100%', width: '95%', justifyContent: 'center', display: 'flex' }]}>
+             <View style={[{ height: '100%', width: '95%', justifyContent: 'center', display: 'flex' }]}>
                <MarqueeView
-                 style={{ backgroundColor: '#FFF', width: '100%', height: '100%' }}
+                 style={{ backgroundColor: '#FFF', height: '100%' }}
                  delay={0}
                  speed={0.25}
                >
@@ -240,7 +231,7 @@
              resizeMode={FastImage.resizeMode.contain}
            />
          </View>}
-     </>
+     </View>
    );
  };
  
@@ -276,7 +267,7 @@
    },
    tickerContainer: {
      alignSelf: 'center',
-     width: height * 0.92 * 16 / 9,
+     width: '100%',
      height: '8%',
      overflow: 'hidden',
      paddingVertical: 2,
@@ -284,7 +275,6 @@
      flexDirection: 'row',
      alignItems: 'center',
      backgroundColor: '#FFF',
-     marginTop: Platform.OS === "ios" ? -1 : 0,
    },
    tickerLogo: {
      height: '100%',
