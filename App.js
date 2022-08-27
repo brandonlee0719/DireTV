@@ -48,13 +48,20 @@
    const [videoData, setVideoData] = useState([]);
    const [playIndex, setPlayIndex] = useState(-1);
    const [curTime, setCurTime] = useState("00:00");
+   const [isOnline, setIsOnline] = useState(false);
  
    const getLive = async () => {
-     let response = await fetch(
-       'https://tv.dire.it/api/Videos/getlivestatus'
-     );
-     let json = await response.json();
-     return json.isLive;
+    try{
+      let response = await fetch(
+        'https://tv.dire.it/api/Videos/getlivestatus'
+      );
+      let json = await response.json();
+      setIsOnline(true);
+      return json.isLive;
+    } catch {
+      setIsOnline(false);
+    }
+     
    }
  
    const fetchData = async () => {
@@ -64,11 +71,14 @@
        let data = await fetch(urlWithCorsAnywhere);
        let json = await data.json();
        if (data.ok) {
+        setIsOnline(true);
          return json.items;
        } else {
+        setIsOnline(false);
          console.log("Error occurred while fetching feed");
        }
      } catch (error) {
+      setIsOnline(false);
        console.log(error.toString());
      }
    }
@@ -79,11 +89,14 @@
        let data = await fetch(url);
        let json = await data.json();
        if (data.ok) {
+        setIsOnline(true);
          return json.videos;
        } else {
+        setIsOnline(false);
          console.log("Error occurred while fetching feed");
        }
      } catch (error) {
+      setIsOnline(false);
        console.log(error.toString());
      }
    }
@@ -147,7 +160,15 @@
            onEnd={() => setIsLoading(false)}
          />
        </View>}
-       {!isLoading &&
+       {!isLoading && !isOnline && <View style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent:'center'
+       }}>
+        <Text style={{fontSize: 20, color: '#FFF'}}>Problema di connessione alla rete</Text>
+        </View>}
+       {!isLoading && isOnline && 
          <View style={[styles.container, {
            display: isLoading ? "none" : "flex",
            position: 'relative',
@@ -226,7 +247,7 @@
              </View>
            </View>}
            <FastImage
-             style={[styles.whiteLogo, { right: Platform.OS === 'ios' ? isLive ? '11%' : '14%' : isLive ? '3%' : '6%' }]}
+             style={[styles.whiteLogo, { right: Platform.OS === 'ios' ? isLive ? '11%' : '4%' : isLive ? '3%' : '6%' }]}
              source={require("./assets/white_logo.png")}
              resizeMode={FastImage.resizeMode.contain}
            />
